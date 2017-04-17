@@ -1,0 +1,56 @@
+################################################################################
+# 2017 - Ben Krulewitch 
+#
+# BashCommonSrc - code to be executed at the beginning of nearly all my bash scripts.  
+################################################################################
+
+# The following three lines should start out each script, even
+# if they are duplicated here, because they are very important.
+# They stop the script at the first sign of something wrong, much
+# preferable to undefined behavior on the filesystem.  
+
+# error on usage of an unset variable
+set -o nounset
+# same command, above is more readable
+#set -u
+
+# exit script if any command returns a nonzero value
+set -o errexit
+# same thing, but above is more readable
+#set -e
+
+# return error if any command in a pipeline fails, instead of using
+# return code of last command in pipe.  
+# Note: not appropriate for all scripts
+#set -o pipefail
+
+#useful debugging flags...
+# print each command to stdout before executing it
+#set -v
+
+# print each expanded command to stdout before executing it
+#set -x
+
+#set -o verbose
+# ensure this file only gets sourced once, otherwise behavior of OrigDir will be incorrect.  
+if [ -z "${BashCommonSrcRan+x}" ]; then
+    BashCommonSrcRan="ran"
+else
+    echo "BashCommonSrc already sourced - returning"
+    return
+fi
+
+# BHK Note, saw this recommendation but not sure i want to include this is all scripts,
+# so i've left it commented out.
+# Set the Internal Field Separator to include tabs and newlines, default value
+# also includes spaces
+#IFS=$'\n\t'
+
+# save directory at the beginning of script execution so we can return there at the end
+OrigDir=$(pwd)
+
+# Get path to the executing script.  This does NOT work.  If the script is executed
+# from the same directory, $0 will contain no path!  
+#ScriptPath="$(dirname "$0")"
+
+

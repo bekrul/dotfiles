@@ -1,0 +1,355 @@
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 2017 - Ben Krulewitch 
+"
+" A common vimrc file for development, managing the setting of os and env
+" specific settings. 
+"
+" Note:  originally developed on cygwin, hopefully all os specific elements
+" have now been isolated. 
+"
+" Use the following command to see what vimrc files have been loaded:
+" :scriptnames
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" Enable vim (don't limit functionality to old skool vi).  Generally enabled
+" by default, but better safe than sorry.  
+set nocompatible
+
+""""""""" Identify the platform """""""""
+
+" True if running windows gvim or vim
+if has('win32')
+    let IsWin = 1
+else
+    let IsWin = 0
+endif
+
+" True if running macvim 
+if has('gui_macvim')
+    let IsMac = 1
+else
+    let IsMac = 0
+endif
+
+" has('unix') returns true if running on linux, cygwin cli vim, macvim, or mac cli vim!
+" so only set IsLinux if IsMac and IsWin are false.   
+if !IsMac && !IsWin && has('unix')
+    let IsLinux = 1
+else 
+    let IsLinux = 0
+endif
+
+let PlatformFound = IsWin || IsLinux || IsMac
+if 0 == PlatformFound
+    echom "vimrc warning:  unknown platform!"
+endif
+
+""""""""" Set project directory """""""""
+" vim must be opened from the project directory for build functions to work
+let projdir = getcwd()
+
+""""""""" Determine project type """"""""
+if filereadable(projdir . "/.ccsproject")
+	let IsCCS = 1
+else
+	let IsCCS = 0
+endif
+
+if !empty(glob(projdir . "/*.vcproj"))
+	let IsVS2008 = 1
+else
+	let IsVS2008 = 0
+endif
+
+
+""""""""" Windows specific behavior """""
+if IsWin
+    " When running windows gvim...
+    source $VIMRUNTIME/vimrc_example.vim
+    source $VIMRUNTIME/mswin.vim
+    behave mswin
+
+    " Note: no need for pathogen.  the only 'plugins' i'm using are color
+    " schemes, which i'm adding via simply copying the necessary file to
+    " vimfiles/colors  
+    "execute pathogen#infect()
+endif
+
+""""""""" vim behavior customizations """""""""
+
+" Automatically change to the directory of the opened file.
+" I have this commented out because the build scripts require that the working 
+" directory is the project directory.  
+" It is simple enough to turn this on as needed via typing in the following
+" command.  
+"set autochdir
+
+" detect filetype each time a file is edited, and load the appropriate plugins
+" and indent settings
+filetype plugin indent on
+
+syntax on
+
+" no more arrow keys!
+noremap <UP> <NOP>
+noremap <DOWN> <NOP>
+noremap <RIGHT> <NOP>
+noremap <LEFT> <NOP>
+
+" remap write to update so that files are only written when they have been
+" modified.  
+" always use noremap over map to prevent recursion 
+
+" Use update instead of write.  This prevents file timestamps from being 
+" updated unless the file is actually changed.  
+" Note that the default behavior of the command :wa is update all, not write all.
+nnoremap :w :up
+nnoremap :wq :up \| :q
+nnoremap :W :up
+nnoremap :Wa :wa
+nnoremap :WA :wa
+" Note:  the following did not work, so created map of :ua to update all files 
+"nnoremap :upa :wa
+nnoremap :ua :wa   
+
+"Set the status line options. Make it show more information.
+set laststatus=2
+set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [POS=%l,%v][%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}
+
+"set line no, buffer, search, highlight, autoindent and more.
+"set nu
+set hidden
+set ignorecase
+set incsearch
+"set hlsearch " highlight search text.  sometimes useful, sometimes annoying
+set smartcase
+set showmatch
+set autoindent
+set ruler
+set vb
+if IsWin
+    " Note: commented out seemed suspect
+    "set viminfo+=n$VIM/_viminfo
+endif
+set noerrorbells
+set showcmd
+set mouse=a
+set history=1000
+set undolevels=1000
+set scrolloff=7 " start scrolling 7 lines from top or bottom of page
+set sidescrolloff=5
+set tabstop=4 "set tab to 4 spaces
+set shiftwidth=4 " automatic indentation to 4 spaces
+" opting for tabs instead of spaces, plays better with other editors
+"set expandtab "convert tabs into spaces 
+
+"set number " show line numbers
+"set splitright
+"set splitbelow
+set showmatch 
+
+" commands i had in linux .vimrc, unsure if i want these anymore:
+"set softtabstop=4
+"set cindent
+
+" set default colorscheme
+" to change colorscheme while vim is open, type:
+" :colors zenburn
+colorscheme kolor
+"colorscheme zenburn
+"colorscheme solarized
+"set background=light
+
+
+" set abbreviation to the project directory
+exec "cabbrev prjdir" projdir
+
+" create XRU command to toggle read only bit
+if IsWin
+    function! ToggleReadOnlyBit()
+      let fname = fnameescape(substitute(expand("%:p"), "\\", "/", "g"))
+      checktime
+      execute "au FileChangedShell " . fname . " :echo"
+      if &readonly
+        silent !attrib -r %
+      else
+        silent !attrib +r %
+      endif
+      checktime
+      set invreadonly
+      execute "au! FileChangedShell " . fname
+    endfunction
+    command! XRU call ToggleReadOnlyBit()
+else
+    function! ToggleReadOnlyBit()
+      let fname = expand("%:p") 
+      checktime
+      execute "au FileChangedShell " . fname . " :echo"
+      if &readonly
+        silent !attrib -r %
+      else
+        silent !attrib +r %
+      endif
+      checktime
+      set invreadonly
+      execute "au! FileChangedShell " . fname
+    endfunction
+    command! XRU call ToggleReadOnlyBit()
+endif
+
+""""""""" Gui vs CLI (command line interface) configuration """""""""
+if has("gui_running")
+    "Set Color Scheme and Font Options
+    "set guifont=Consolas:h12
+    if IsWin 
+        set guifont=Consolas:h8
+    endif
+    
+    set guioptions+=m "adds menubar
+    set guioptions-=T "hide toolbar
+    set guioptions+=r "always present scrollbar
+
+    " position window in upper left
+	if IsMac
+		winpos 10 0
+	else
+		winpos 0 0
+	endif
+    
+    " set desired screen size...
+    " (half of screen horizontally, all of screen vertically)
+    "set lines=50
+    "set columns=134
+    set lines=67
+    set columns=140
+    
+    " setup familiar copy and paste
+    nmap <C-V> "+gP
+    imap <C-V> <ESC> <C-V> a
+    vmap <C-C> "+y
+else
+	" dont set size when running vim within command line
+    "set lines=52
+    "set columns=115
+endif
+
+" an attempt to have all tabs highlighted in blue, but it doesn't work.
+" suspect that the language syntax highlighting overrides this...
+"syntax match Tab /\t/
+"hi Tab gui=underline guifg=blue ctermbg=blue
+
+""""""""" Abbreviations """""""""
+" example of how to setup an abbreviation for commonly typed code block:
+"iab DGNU 
+"\<CR>#ifdef __GNUC__   //     __GNUC__
+"\<CR>#else             // not __GNUC__
+"\<CR>#endif            // not __GNUC__
+
+
+""""""""" Tag Files """""""""
+" Tell vim where to find tag files.  
+" default tags definition.  tells vim to look for file named tags first in the
+" directory of the current file, and then in the current directory 
+"set tags=./tags,tags
+" Use a more explicit name "vimctags" as these files will be located in
+" various source and project directories and it may not be clear what they are for.  
+" also would like to avoid name collisions.  
+" look first in the project directory, then the directory of the file, 
+" and then search upwards from the location of the file.  
+"let &tags = projdir . "\\vimctags,./vimctags;/"
+" The above is not working as desired.  I'd like it to stop at the first tags file
+" found, but it appears to be going through the entire list.  
+" For that reason, simply tell it to use the vimctags file in the
+" project directory, an inconvenience if opening vim from other locations
+" but at least it works predictably when vim is opened from the project dir.
+if IsWin
+    let tagstmp = projdir . "\\vimctags"
+else
+    let tagstmp = projdir . "/vimctags"
+endif
+let &tags = tagstmp
+
+" Tell vim to look for tags file in current directory.  
+" Note with this definition, the tag file used changes if the directory
+" changes, such as when opening another file when autochdir is on.  
+"set tags=vimctags
+
+
+""""""""" errorformat """""""""
+" The default error format works correctly for parsing gcc output
+" customize as needed for specific project types
+
+if IsCCS
+	" CCS6 error format 
+	" example error line:
+	" "somefile.c", line 15: rule cannot be matched.
+	" It's generally recommended to use += to append rules to the default list.
+	" However the default rules attempt to parse this format and fail, so I'm
+	" overriding the default list.  
+	set errorformat=\"%f\"\\,\ line\ %l:\ %m
+	" the above works, but the following may be better.  It is more specific and thus
+	" does not get triggered when reading a VS2008 error file. 
+	" However, the following format does not work when running vim from
+	" cygwin bash command line.  
+	"set errorformat=%*[\"]%f%*[\"]\\,\ line\ %l:\ %m
+endif
+
+if IsVS2008
+	" VS2008 error format
+	" The following appears to work, as in vim parses the error file, however 
+	" it is unable to resolve the paths in the error file.  likely i need relative
+	" paths due to conversion from unix to windows?  
+	set errorformat=1>%f\(%l\)\ :\ %m
+endif 
+
+" g++ error format
+" untested suggestion, however default errorformat seems to work fine for g++
+"set errorformat^=%-GIn\ file\ included\ %.%# 
+
+" setup errorfile used by quickfix (ie :cf) to point to persistent error file 
+" generated by vmake script
+set errorfile=vimbuild.err
+
+
+""""""""" shell and compiler """""""""
+"set shell=C:\cygwin64\bin\bash.exe\ -login
+"set shellcmdflag=--login\ -c
+"set shellcmdflag=-c
+"set shellxquote=\"
+
+if IsWin
+    " use dos shell when running windows vim, use of bash in this env is messy
+    set shell=cmd
+    set shellcmdflag=/c
+    " run make scripts by executing vmake in bash from cmd
+    " works ok, just avoid from having to pass in any parameters involving paths
+    set makeprg=bash\ vmake
+else
+    " otherwise use bash shell
+    set shell=bash
+    set shellcmdflag=-c
+    set makeprg=vmake
+endif
+
+
+if IsCCS
+	" As the errorlist is written to file by the compiler (or make script), 
+	" set shellpipe to nothing so vim does not write the errorfile. 
+	set shellpipe=
+	
+	" set error file used by vims make command to point to temporary file
+	" generated by vmake script, as vim deletes this file once it has read it.   
+	set makeef=vimbuild.err.tmp
+endif
+
+" config vim to use c++ format for arduino files 
+"au BufRead,BufNewFile *.ino,*.pde set filetype=cpp
+" see the following for more comprehensive vim setup for arduino...
+"https://medium.com/@jayfajardo/setting-up-vim-for-arduino-66a90706b5ec#.xpxaknmq3
+
+
+""""""""" load system specific vim customizations """""""""
+let vimrcpostpath = $HOME."/.vimrc_post"
+if filereadable(vimrcpostpath)
+    exec 'source ' . vimrcpostpath
+endif

@@ -1,0 +1,43 @@
+################################################################################
+# 2017 - Ben Krulewitch 
+#
+# .bash_profile - Common commands to customize my login shell.
+#
+# ~/.bash_profile is sourced by bash for Login shells, and should be setup as
+# a symbolic link to this file.  
+#
+# System specific content goes in: 
+# ~/.bash_profile_pre and ~/.bash_profile_post.   
+#
+# Most customizations are placed in .bashrc, however, in certain environments,
+# the .bash_profile is sourced instead of .bashrc.  Therefore, the main function
+# of this script is to source the ~/.bashrc file.   
+#
+# Note:  ~/.bash_profile is sourced instead of ~/.bashrc when opening an
+# interactive nonlogin shell on the following platforms:
+# Mac OS terminal
+# Cygwin - the shortcut i use is configured to open a login shell.  The nonlogin
+#          shell doesn't add cygwin executable directories to PATH.  
+#
+# Cygwin Notes:
+# Cygwin shortcut is configured to open a login shell with the following target:
+# C:\cygwin64\bin\mintty.exe -i /Cygwin-Terminal.ico -
+# (the dash at the end specifies login shell)
+################################################################################
+
+# allow for system specific .bash_profile customization prior to this script
+if [ -f ~/.bash_profile_pre ]; then
+    source ~/.bash_profile_pre
+fi
+
+if [ -f ~/.bashrc ]; then
+    source ~/.bashrc
+else
+    echo ".bash_profile warning:  No ~/.bashrc found! " 
+fi
+
+# allow for system specific .bash_profile customization following this script
+if [ -f ~/.bash_profile_post ]; then
+    source ~/.bash_profile_post
+fi
+

@@ -1,0 +1,60 @@
+################################################################################
+# default.vmake_profile	- default settings for customizable values used by
+#   					  vmake scripts.
+#
+# Ben Krulewitch - 2017 
+################################################################################
+
+#
+# Customizable settings
+#
+
+# Name of the tags file generated. Requires associated change in .vimrc. 
+# Avoiding vim's default tag filename 'tags' help avoid name collision.
+CtagsFilename=vimctags
+
+# generate tags with file paths relative to the directory containing the tag file, 
+# and generate tags for declarations in .h files.  
+CtagFlags="--tag-relative=yes --c++-kinds=+p" 
+
+# set the name for file containing build errors, located in project home directory.  
+VMakeErrFile=vimbuild.err
+VMakeErrFileTmp=vimbuild.err.tmp
+
+# allowed values: git, tfs
+SrcCtrlType=git
+
+#
+# Customizable settings with default values
+#
+
+# defaults to project directory name
+#ProjName=
+
+#
+# compiler specific defaults 
+#
+
+# write errors to file so they can be parsed into $VMakeErrFile
+# suppress ULP power advisor warnings as they get parsed as errors (use ide to review this advice)
+# 
+# Note: On cygwin, set this value separately in mspmake.bat
+TiCompilerOptions="--write_diagnostics_file --advice:power=none"
+
+# VS2008 Debug vs Release build is hard coded
+VsBuildConfig=Debug
+
+# System Wide Environment Variables (define in ~/.bashrc_post)
+#
+# Complete path to devenv.com windows command line program for VS2008 builds
+#VS2008_DEVENV_PATH=?
+#
+# msp430 fw install utility
+#MSP_FLASHER_PATH=?
+#
+# Relative path from ccs project directory msp430 header files
+# Note: Relative path is required because of trouble getting ctag to accept 
+#  combination of absolute and relative paths.  Relative path requirement for cygwin only?
+#MSP_INCLUDE_REL_DIR=?
+
+ 

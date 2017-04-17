@@ -1,0 +1,6 @@
+# VIM temporary files
+*~
+*.swp
+
+# Mac OS files
+.DS_Store

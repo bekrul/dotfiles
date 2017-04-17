@@ -1,0 +1,48 @@
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 2017 - Ben Krulewitch 
+"
+" vimrc_WINDOWS - copied to C:\Users\%USERNAME%\Vim\_vimrc, one of several
+" file locations checked by the windows vim program when opened.
+"
+" Any changes to C:\Users\%USERNAME%\Vim\_vimrc must be manually merged into
+" ~/dotfiles/vim/vimrc_WINDOWS 
+"
+" These paths are depedent on Windows vim being installed to:
+" C:\Users\%USERNAME%\Vim
+"
+" Windows gvim is choosing the following vimrc file when opened from cygwin:
+" C:\cygwin64\home\$USER\.vimrc 
+" This is problematic because this location contains a symbolic link that
+" Windows doesn't know how to follow.  
+" Vim looks for .vimrc in your home directory, and when loaded from cygwin
+" it picks up the $HOME env variable defined in that environment.  
+" Commands to see what vim is using as home directory:
+" :echo $HOME
+" :echo expand('~')
+"
+" I've gotten around this by creating an alias for gvim that passes in the
+" desired vimrc file explicitly.  
+"
+" Note that when opening gvim from windows explorer, it uses the following
+" home directory:
+" C:\Users\%USERNAME%
+" No _vimrc exists here, so it looks in the Vim install dir:
+" C:\Users\%USERNAME%\Vim 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" Source the vimrc file maintained in dotfiles repository.  
+" depending on the environment, may need to use variable $USERNAME, $USER,
+" $HOME?
+" For now, $USERNAME seems to work in all environments this file is used in.  
+"if has('Win32') && has('gui')
+let vimrcpath="C:\\cygwin64\\home\\".$USERNAME."\\dotfiles\\vim\\vimrc"
+if filereadable(vimrcpath)
+    exec 'source ' . vimrcpath
+
+    " As windows vim is oftened via alias gvim in cygwin, and that alias
+    " passed in the vimrc file to use, MYVIMRC does not get set.  
+    " So set it here to the file being sourced.  
+    let $MYVIMRC=vimrcpath
+else
+    echom 'unable to source vimrc: ' . vimrcpath
+endif

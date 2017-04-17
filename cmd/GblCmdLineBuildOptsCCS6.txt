@@ -1,0 +1,11 @@
+################################################################################
+# 2017 - Ben Krulewitch 
+#
+# GblCmdLineBuildOptsCCS6.txt - command file for a CCS6 project.  
+#
+# Used to pass additional compiler options to gmake when building a project
+# on the command line.  
+################################################################################
+
+# send compiler errors to error file.  
+"--"write_diagnostics_file

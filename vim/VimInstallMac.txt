@@ -1,0 +1,72 @@
+Ben's MacVim Install Notes
+==========================
+
+General Notes
+-------------
+MacVim version 7.4.258
+12/5/15 - tested on yosemite
+12/4/15 - tested on mavericks 
+
+BHK Note - have not tested this process since latest update to notes.  
+
+MacVim Installation
+-------------------
+GET INSTALL PACKAGE
+Installer included in dotfiles repository:
+~/dotfiles/vim/installers/MacVim-snapshot-73-Mavericks.tbz
+original source:
+https://github.com/b4winckler/macvim/releases/download/snapshot-73/MacVim-snapshot-73-Mavericks.tbz
+
+INSTALL
+Unzip package:
+$tar -xvzf ~/dotfiles/vim/installers/MacVim-snapshot-73-Mavericks.tbz (or double click on file)
+
+Copy MacVim.app to applications directory.  
+In Finder, go to application directory, ctrl click on MacVim and select open.  A security warning will appear, click through it (this happens the first time you open MacVim).  
+
+Now you can open via spotlight:
+[command-space vim]
+
+Add to dock:
+control click MacVim on dock while open, select options->Keep in dock
+
+MVIM SETUP (required)
+The mvim script is one of the 3 files included in the MacVim package.  
+$echo $PATH
+Verify /usr/local/bin is part of PATH.  
+If not, add to to path in .bashrc_post.  
+
+$sudo su
+verify directory /usr/local/bin exists
+#cat /usr/local/bin
+If not, create it:
+#mkdir /usr/local
+#mkdir /usr/local/bin
+install mvim
+#cp mvim /usr/local/bin
+
+VERIFY VERSION
+$<vim> --version
+
+Inside vim:
+:version
+
+output is:
+VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Apr 21 2014 14:54:22)
+MacOS X (unix) version
+Included patches: 1-258
+...
+
+Setup Color Shemes
+------------------
+create .vim dir if nonexistent:
+$ mkdir ~/.vim   
+link colorschemes folder into .vim:
+$ ln -s ~/dotfiles/vim/vimfiles/colors ~/.vim
+default colorscheme of kolor is set by dotfiles repos vimrc file.  
+
+Setup vimrc
+-----------
+$ mv -n ~/.vimrc ~/.vimrc_post   [if there is a previous .vimrc file]
+$ ln -s ~/dotfiles/vim/vimrc ~/.vimrc
+review the old vimrc file now at ~/.vimrc_post and move/delete it unless needed.  

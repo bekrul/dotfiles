@@ -1,0 +1,92 @@
+Vim installation notes for Windows 7
+====================================
+
+-------------
+General Notes
+-------------
+The terminal version of vim gets installed via selecting the vim package during
+cygwin install.  However, the windows gvim application is preferable for
+general use.  One of the only times i use the terminal version is when
+opening a file that is a symbolic link, as the windows application can't
+follow cygwin symbolic links.  
+
+The following instructions install gvim and then configure both gvim and the cygwin
+command line vim to use the same configuration.  As windows programs (gvim) can't follow
+cygwin symbolic links, we copy a real file to a location that gvim checks for vimrc files.  
+This file than sources the vimrc maintained in repository, so that changes to vimrc under 
+source control does not require reinstallation for gvim.  
+
+An alias in my bashrc file allows me to open windows gvim application from 
+cygwin bash prompt.  
+
+These notes are somewhat based on instructions downloaded from vim.org:
+~/dotfiles/vim/ugrankar.pdf.  They are abbreviated for my use.  
+
+-----------------
+gvim Installation
+-----------------
+In Windows Explorer run:
+C:\cygwin64\home\<username>\dotfiles\vim\installers\gvim74.exe
+select Full installation
+change installation directory to:
+C:\Users\<username>\Vim
+This way, _vimrc file and any extensions we add are located in user directory
+instead of C:\Program Files.  This is better because the install location has no
+spaces in the path, and access to Program Files is controlled by Windows.  
+
+---------------------
+create .vim directory
+---------------------
+for gvim:
+$ mkdir /cygdrive/C/Users/<username>/Vim/vimfiles
+for terminal vim:
+$ mkdir  ~/.vim
+
+---------------
+setup autoloads
+---------------
+skip this section
+This step was recommended as precursor to pathogen install on windows, but i'm
+not using pathogen at this time.  
+#$ mv vim74\autoload vimfiles\autoload   
+# instead, for now, just create empty autoloads directory:
+#$ mkdir vimfiles\autoload
+
+--------------
+setup pathogen
+--------------
+Skip this section - as the only 'plugins' i use are colorschemes, pathogen is not needed.  
+Left these notes here as lots of sites seem to recommend using pathogen, ill probably have 
+to use it eventually.
+$ cd /cygdrive/c/Users/<username>/Vim
+$ mkdir vimfiles/bundle
+$ cp ~/dotfiles/vim/vimfiles/autoload/pathogen.vim vimfiles/autoload
+Note:  the doc from vim.org suggests installing vim-kolor this way.  However, it seems simpler
+to just copy it directly into vimfiles/colors for my purposes.  
+# install vim-kolor colorscheme...
+#$ cp ~/dotfiles/vim/bundles/vim-kolor vimfiles/bundle
+
+
+-------------------
+setup color schemes
+-------------------
+for gvim:
+$ cp -r ~/dotfiles/vim/vimfiles/colors /cygdrive/C/Users/<username>/Vim/vimfiles
+for terminal vim:
+$ ln -s /cygdrive/C/Users/<username>/Vim/vimfiles/colors ~/.vim/colors
+
+Note that the color schemes in the terminal version of vim are kindof ugly
+because only 16 colors are used.  There are ways to fix this, but i
+don't use the terminal version of vim very often so haven't gotten around to
+addressing this.  
+
+-----------
+Setup vimrc
+-----------
+for terminal vim:
+$ mv -n ~/.vimrc ~/.vimrc_post
+$ ln -s ~/dotfiles/vim/vimrc ~/.vimrc
+for gvim:
+$ cp -n ~/dotfiles/vim/vimrc_WINDOWS /cygdrive/C/Users/$USER/Vim/_vimrc 
+review the old vimrc file now at ~/.vimrc_post and move/delete it unless needed.  
+

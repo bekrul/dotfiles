@@ -1,0 +1,120 @@
+################################################################################
+# vmakeCommonSrc - commands to exec and variables to define at start of all 
+#                  vmake related scripts
+#
+# Ben Krulewitch - 2017 
+################################################################################
+
+# exit script if it encounters an uninitialized variable
+set -o nounset
+
+# exit script if any command returns a nonzero value
+set -o errexit
+
+# ensure this file only gets sourced once, otherwise behavior of OrigDir will be incorrect.  
+if [ -z "${vmakeCommonSrcRan+x}" ]; then
+	vmakeCommonSrcRan="ran"
+else
+    echo "vmakeCommonSrc already sourced - returning"
+    return
+fi
+
+# Note: any output (ie echo) in vmakeCommonSrc gets repeated when running commands like 'vmake tags'
+
+# common env setup for dotfiles bash scripts
+#
+# Note: ~/dotfiles/bash/bin must be part of $PATH.
+source BashCommonSrc
+
+# The following begins implementation of allowing the project directory to be 
+# passed in over the command line.  However, requiring execution from the project 
+# directory is simpler.
+#if [ $# -lt 1 ]; then
+#    ProjDir=`pwd`
+#else
+#    ProjDir="$1"
+#fi
+#
+# set project dir to execution dir. (script requirement)
+ProjDir=$(pwd)
+
+ProjName=$(basename "$ProjDir")
+
+# load default settings
+source default.vmake_profile
+
+# load project specific settings
+if [ -f "$ProjDir/.vmake_profile" ]; then
+	source "$ProjDir/.vmake_profile"
+fi
+# Note: this allows customizing project name
+
+ProjFileEclipse="$ProjDir/.project"
+ProjFileCCS="$ProjDir/.ccsproject"
+ProjFileVS="$ProjDir/$ProjName.vcproj"
+ProjFileMakefile="$ProjDir/Makefile"
+ProjFileArduino="$ProjDir/.isArduinoProject"
+
+ProjFndCnt=0
+IsVSProj=false 
+IsCCSProj=false 
+IsEclipseProj=false 
+IsArduinoProj=false 
+IsMakefileProj=false 
+
+# Note: following syntax doesnt work on cygwin
+#((ProjFndCnt++))
+
+if [ -f "$ProjFileVS" ]; then
+   	ProjTypeString="VS2008" 
+	IsVSProj=true
+	((ProjFndCnt+=1))
+fi
+
+if [ -f "$ProjFileEclipse" ]; then
+   	ProjTypeString="Eclipse" 
+	IsEclipseProj=true
+	((ProjFndCnt+=1))
+
+	if [ -f "$ProjFileCCS" ]; then
+    	IsCCSProj=true
+
+		# TODO pull model from project file or make system specific, rename as McuHeaderFile
+		# see .ccsproject file:
+		# <deviceVariant value="MSP430FR4133"/>
+		MspFr2032HeaderFile="$MSP_INCLUDE_REL_DIR/msp430fr2032.h"
+
+
+		# get bin filename from makefile
+		MspHexFileName=`awk '/^BIN_OUTPUTS /{getline;print $1;exit}' "Debug/makefile"`
+		
+		MspHexRelPath="Debug/$MspHexFileName"
+		MspFlasherInstallArgs="-W $MspHexRelPath -z [VCC,RESET]"
+		# added after cmd line parameters are parsed	
+		#MspFlasherInstallArgs+=" -e [ERASE_MAIN|ERASE_ALL]"
+	fi
+fi
+
+if [ -f "$ProjFileArduino" ]; then
+   	ProjTypeString="Arduino"	
+	IsArduinoProj=true
+	((ProjFndCnt+=1))
+fi
+
+if [ -f "$ProjFileMakefile" ]; then
+   	ProjTypeString="Makefile"	
+	IsMakefileProj=true
+	((ProjFndCnt+=1))
+fi
+
+if (( "$ProjFndCnt" > 1 )); then
+    echo "vmake error: multiple projects found.  Exiting..."
+    exit 1
+fi 
+
+if (( "$ProjFndCnt" < 1 )); then
+    echo "vmake error: no project found in $ProjDir.  Exiting..."
+    exit 1
+fi
+
+        

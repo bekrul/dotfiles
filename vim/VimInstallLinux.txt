@@ -1,0 +1,20 @@
+Ben's Linux Vim Config Notes
+============================
+
+Installation
+------------
+install vim and gvim via package manager if not already installed.  
+
+
+Setup Color Shemes
+------------------
+create .vim dir if nonexistent:
+$ mkdir ~/.vim   
+create link to color schemes in repo
+$ ln -s ~/dotfiles/vim/vimfiles/colors ~/.vim 
+
+Setup vimrc
+-----------
+$ mv -n ~/.vimrc ~/.vimrc_post
+$ ln -s ~/dotfiles/vim/vimrc ~/.vimrc
+review the old vimrc file now at ~/.vimrc_post and move/delete it unless needed.  

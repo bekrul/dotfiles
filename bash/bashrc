@@ -1,0 +1,162 @@
+################################################################################
+# 2017 - Ben Krulewitch 
+#
+# bashrc - A common bashrc to configure my dev environment. 
+#
+# ~/.bashrc is sourced by bash for nonlogin interactive shells, and should be
+# setup as a symbolic link to this file.  
+# For login shells, my ~/.bash_profile is configured to source ~/.bashrc.  
+# 
+# System specific content can go in ~/.bashrc_pre and ~/.bashrc_post. 
+#
+# Note: ~/.profile is recommended over ~/.bashrc for setting environment
+#  variables such as PATH.  Ensures they are available in a nonlogin shell
+#  such as a command executed in a subshell? 
+#  However, in practice it is more convenient to use ~/.bashrc so that when
+#  making changes to scripts, you don't have to log out and log in for changes
+#  to be applied.  
+################################################################################
+
+# If the system is redhat/centos, source the global bashrc file.  
+# Note:  On other platforms, the global bashrc file gets sourced automatically.
+#        (tested on cygwin, mac os, and opensuse)
+#        /etc/bash.bashrc - cygwin, opensuse11
+#        /etc/bashrc - mac os
+if [ -f /etc/redhat-release ]; then
+    if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+    fi
+fi
+
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
+
+# It is best practice to include the following commands at start of any bash 
+# script, but not for interactive shell.
+#
+# generate error when encountering an unset variable 
+# Causes problems if sourcing scripts not written to handle this setting, 
+# Also causes problems with tab completion in cygwin
+#set -o nounset
+#
+# exit on error
+#set -o errexit
+
+# include dotfile bash scripts in path
+export PATH="$PATH:$HOME/dotfiles/bash/bin"
+
+# allow for system specific bashrc customization prior to this script
+if [ -f ~/.bashrc_pre ]; then
+    source ~/.bashrc_pre
+fi
+
+### OS independent config BEGIN ###
+
+# When changing directory small typos can be ignored by bash
+# for example, cd /vr/lgo/apaache would find /var/log/apache
+#shopt -s cdspell
+
+alias ll='ls -l'
+alias la='ls -a'
+alias lla='ls -la'
+alias diff='diff -ubB'
+alias prettypath='tr : '"'\n'"' <<< $PATH'
+alias todo='grep -rin "todo" --exclude "*~" --exclude "*.swp" *'
+# always exclude vim temporary files from grep commands
+alias grep='grep --exclude "*~"'
+# shortcut to grep recursively through all c/c++ source files in current dir
+# the -a is necessary as windows source files seem to contain characters that cause grep to identify the files as binary. 
+alias grepc='find . -name "*.cpp" -o -name "*.c" -o -name "*.h" | xargs grep -a'
+
+# alias whence='type -a'                        # where, of a sort
+
+# Some applications read the EDITOR variable to choose text editor.  
+export EDITOR=vim
+
+# currently not used, add ~/bin to path...
+#PATH=$PATH:$HOME/bin
+#export PATH
+
+# save the current directory as the destination for the go aliases in files in the home directory.
+# use to quickly get to frequently used directories.  
+export BASH_GO_DIR_FILENAME="$HOME/BASH_GO_DIR"
+export BASH_GP_DIR_FILENAME="$HOME/BASH_GP_DIR"
+alias setgo='pwd > $BASH_GO_DIR_FILENAME'
+alias setgp='pwd > $BASH_GP_DIR_FILENAME'
+
+# change dir to most recently saved location with alias setgo
+alias go='cd "$(cat $BASH_GO_DIR_FILENAME)"'
+alias gp='cd "$(cat $BASH_GP_DIR_FILENAME)"'
+
+### OS independent config END ###
+
+# Note: any variables set in this script will be present on my command line environment, so use
+# descriptive names to reduce likelyhood of collisions. 
+ShellPlatform='unknown'
+ShellPlatformUnamestr=`uname -s`
+if [[ "$ShellPlatformUnamestr" == 'Linux' ]]; then
+    ShellPlatform='linux'
+elif [[ "$ShellPlatformUnamestr" == 'Darwin' ]]; then
+    ShellPlatform='mac'
+elif [ "$(expr substr $ShellPlatformUnamestr 1 6)" == 'CYGWIN' ]; then
+    ShellPlatform='cygwin'
+else
+    echo ".bashrc warning: unkown shell platform $ShellPlatformUnamestr !"
+fi
+export ShellPlatform=$ShellPlatform
+
+# Mac specific config
+if [[ $ShellPlatform == 'mac' ]]; then
+    alias ls='ls -G'
+
+    # if opening command line vim, use mvim (macvim loader script)
+    alias vim='mvim -v'
+    alias vi='mvim -v'
+
+    # open gui version of macvim
+    alias gvim='mvim'
+
+
+# Linux specific config
+elif [[ $ShellPlatform == 'linux' ]]; then
+    : # nothing to do
+
+# Cygwin specific config
+elif [[ $ShellPlatform == 'cygwin' ]]; then
+    # set terminal width and height how i like...
+    TerminalWidth=115
+    TerminalHeight=52
+    echo -en "\e[8;${TerminalHeight};${TerminalWidth}t";
+    
+    # setup gui vim alias to use Windows version of GVim.  It simplifies copying to and from windows 
+    # applications and is preferable to dealing with xwindows to run gui vim.  
+    # Also have it use the same _vimrc file as when opened by windows explorer.  
+    # This gets around the issue that gvim defaults to $HOME/.vimrc, if $HOME is set which it is
+    # when executed using this alias.  As $HOME/.vimrc contains a unix symbolic link, this does 
+    # not work for the windows vim.  
+    alias gvim='/cygdrive/c/Users/$USER/Vim/vim74/gvim.exe -u C:\\Users\\$USER\\Vim\\_vimrc' 
+    
+    # noop
+    # Use bash cli version of vim, useful when working with certain files such as opening symbolic links.  
+    #alias vim='vim'
+
+    # open windows explorer in the current directory
+    alias expl='explorer .'
+
+    # use C locale, greatly speeds up grep when working with ascii
+    # this also fixed something, not sure what?  
+    # also include exclusion of vim temporary files
+    alias grep='LC_ALL=C grep --exclude "*~"'
+
+    # clear time zone environment variable.  it seems to result in dos command line programs using the wrong time.  
+    export TZ=
+fi
+
+# allow for system specific bashrc customization following this script
+if [ -f ~/.bashrc_post ]; then
+    source ~/.bashrc_post
+fi
+
+# print message to confirm script executed to completion
+echo "The sky above the port was teh color of television, tuned to a dead channel."
+

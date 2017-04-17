@@ -1,0 +1,37 @@
+[user]
+	name = 
+	email = 
+[core]
+	editor = vim
+	excludesfile = /Users/ben/.gitignore_global
+#[difftool "bc3"]
+#	cmd = \"/Applications/Beyond Compare.app/Contents/MacOS/bcomp\" "$LOCAL" "$REMOTE"
+#	path = 
+#[mergetool "sourcetree"]
+#	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+#	trustExitCode = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[commit]
+	#template = /Users/ben/.stCommitMsg
+[diff]
+#	tool = bc3
+#	context = 5
+	guitool = kdiff3
+[difftool "kdiff3"]
+	path = /Applications/kdiff3.app/Contents/MacOS/kdiff3
+#	trustExitCode = false
+[merge]
+	tool = kdiff3
+[mergetool "kdiff3"]
+	path = /Applications/kdiff3.app/Contents/MacOS/kdiff3
+#	trustExitCode = false
+[difftool "sourcetree"]
+	cmd = /Applications/kdiff3.app/Contents/MacOS/kdiff3 \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true

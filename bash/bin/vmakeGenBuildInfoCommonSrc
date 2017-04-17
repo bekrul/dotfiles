@@ -1,0 +1,110 @@
+################################################################################
+# vmakeGenBuildInfoCommonSrc - common defs for vmake build info scripts
+# 
+# 2017 - Ben Krulewitch 
+################################################################################
+
+# exit script if it encounters an uninitialized variable
+set -o nounset
+
+# exit script if any command returns a nonzero value
+set -o errexit
+
+# ensure this file only gets sourced once, otherwise behavior of OrigDir will be incorrect.  
+if [ -z "${vmakeGenBuildInfoCommonSrcRan+x}" ]; then
+	vmakeGenBuildInfoCommonSrcRan="ran"
+else
+    echo "vmakeGenBuildInfoCommonSrc already sourced - returning"
+    return
+fi
+
+# find local Changeset of Msp430 directory [most recent changeset of any file in that directory path]
+# save to buildinfo/.changeset
+findChangeset()
+{
+	if [ "$SrcCtrlType" == git ]; then
+		# Note: value generated here may vary from machine to machine, but that is ok.  
+		#  for this usage, an incrementing number is more useful than the hash associated with the changeset
+		Changeset=$(git rev-list --count --first-parent HEAD)
+
+	elif [ "$SrcCtrlType" == tfs ]; then
+		# get newest local Changeset of any file inside $ProjSrcRelDir (recursive)
+		# 5 getline's are needed to iterate stream past the line containing server changeset for each file
+		Changeset=$("${TF_PATH}" info -r "$ProjSrcRelDir" | awk '/Changeset/{print $3;getline;getline;getline;getline;getline;getline}' | sort -nr | head -1)
+
+		# get local Changeset of current directory
+		# does not work.  local Changeset of directories only changes when the directory itself is modified in TFS
+		#Changeset=$("${TF_PATH}" info . | awk '/Changeset/{print $3; exit}')
+
+	else
+		Changeset=0000
+		echo "Project using unknown revision control - $SrcCtrlType" 
+	fi
+		
+	# save changeset so it can be used by subsequent scripts
+	# primarily for TFS as determining the changeset is slow and requires server connection
+	echo "$Changeset" > "$BuildInfoPath/$ChangesetFileName"
+
+	printf "Determined local Changeset of %s:\t%s\n" "$Changeset"
+}
+
+loadChangeset()
+{
+	if [ -e "$BuildInfoPath/$ChangesetFileName" ]; then
+		Changeset=$(head -n 1 "$BuildInfoPath/$ChangesetFileName")
+	else
+		printf "Changeset file does not exist:\t%s\n" 
+		Changeset=00000000
+	fi
+	printf "local changeset:\t%s\n" $Changeset
+}
+
+# set $UniqFolderName and $UniqFolderPath or exit script
+findUniqFolderName()
+{
+    for char in {A..Z}
+	do
+	    UniqFolderName="${Changeset}_${BuildLabel}_${char}"
+		if [ ! -e "$BuildInfoPath/$UniqFolderName" ]; then
+			UniqFolderPath="$BuildInfoPath/$UniqFolderName"
+			return
+		fi
+	done
+
+	echo "unable to find unique folder name, aborting"
+	exit 1
+}
+
+# copy file at path relative to $ProjPath to $UniqFolderPath
+copyFileToUniq()
+{
+	filepath="$1"
+
+	filename=$(basename "$filepath")
+
+	#echo "copying $filepath  =>  $BuildInfoFolderName/$UniqFolderName/$filename"
+	#printf "copying:  %-30s \t=>  $UniqFolderPath/$filename\n" "$filepath"
+	printf "copying:  %-30s \t=>  $UniqFolderPath/$filename\n" "$ProjPath/$filepath"
+
+	if [ -e "$UniqFolderPath/$filename" ]; then
+		echo "cannot copy to $UniqFolderPath/$filename - already exists"
+	else
+		if [ -e "$ProjPath/$filepath" ]; then
+			cp -n "$ProjPath/$filepath" "$UniqFolderPath/$filename"
+		else
+			echo "skipping $ProjPath/$filepath - does not exist"
+		fi
+	fi
+}
+
+
+# Note: ~/dotfiles/bash/bin must be part of $PATH.
+source vmakeCommonSrc
+
+#
+# Define build info file and folder names
+#
+BuildInfoFolderName=buildinfo
+BuildInfoLogFileName=BuildInfo.log
+ChangesetFileName=.changeset
+LabelDefaultFileName=.default_label
